@@ -471,7 +471,8 @@ public static class Options
         // 预设//9人以上部屋で落ちる現象の対策
         FixSpawnPacketSize = BooleanOptionItem.Create(1_000_200, "FixSpawnPacketSize", false, TabGroup.SystemSettings, true)
             .SetColor(new Color32(255, 255, 0, 255))
-            .SetGameMode(CustomGameMode.All);
+            .SetGameMode(CustomGameMode.All)
+            .SetHeader(true);
 
         _ = PresetOptionItem.Create(0, TabGroup.SystemSettings)
             .SetColor(new Color32(255, 235, 4, byte.MaxValue))
