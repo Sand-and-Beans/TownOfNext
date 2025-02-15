@@ -300,13 +300,14 @@ class ShapeshiftPatch
 
         if (!shapeshifting) Camouflage.RpcSetSkin(__instance);
 
-        //変身解除のタイミングがずれて名前が直せなかった時のために強制書き換え
+        // 变形后刷新玩家名字
         _ = new LateTask(() =>
         {
             Utils.NotifyRoles(NoCache: true);
         },
         1.2f, "ShapeShiftNotify");
 
+        // 变形后刷新玩家皮肤
         if (shapeshifting && Camouflage.IsCamouflage)
         {
             _ = new LateTask(() =>
