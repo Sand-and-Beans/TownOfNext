@@ -307,7 +307,7 @@ class ShapeshiftPatch
         },
         1.2f, "ShapeShiftNotify");
 
-        // 变形后刷新玩家皮肤
+        // 变形后刷新玩家小黑人状态
         if (shapeshifting && Camouflage.IsCamouflage)
         {
             _ = new LateTask(() =>
