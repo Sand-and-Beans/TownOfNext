@@ -319,6 +319,8 @@ public class Main : BasePlugin
         if (!DebugModeManager.AmDebugger) ConsoleManager.DetachConsole();
         else ConsoleManager.CreateConsole();
 
+        ModUpdater.CountAsVisit();
+
         TONX.Logger.Msg("========= TONX loaded! =========", "Plugin Load");
     }
 }

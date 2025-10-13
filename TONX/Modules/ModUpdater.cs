@@ -22,7 +22,7 @@ public class ModUpdater
 #else
         "https://raw.githubusercontent.com/TownOfNext/TownOfNext/TONX-unofficial/info.json",
         "https://cdn.jsdelivr.net/gh/TownOfNext/TownOfNext/info.json",
-        "https://hub.gitmirror.com/https://raw.githubusercontent.com/TownOfNext/TownOfNext/TONX-unofficial/info.json",
+        "https://tonx.leever.cn/api/version.json",
 #endif
     };
     private static IReadOnlyList<string> GetInfoFileUrlList()
@@ -45,7 +45,7 @@ public class ModUpdater
     public static Version minimumVersion = null;
     public static int creation = 0;
     public static string md5 = "";
-    public static int visit => isChecked ? 216822 : 0;
+    public static int visit_count => GetVisitCount();
 
     public static string announcement_zh = "";
     public static string announcement_en = "";
@@ -299,6 +299,15 @@ public class ModUpdater
             Logger.Exception(ex, "GetMD5HashFromFile");
             return "";
         }
+    }
+
+    public static bool CountAsVisit()
+        => RemoteHelper.GetRemoteStringAsync("https://tonx.leever.cn/api/stats/visit").Result.Item2;
+
+    private static int GetVisitCount()
+    {
+        var (count, success) = RemoteHelper.GetRemoteStringAsync("https://tonx.leever.cn/api/stats/visitor").Result;
+        return success ? int.Parse(count) : 0;
     }
     
 #endif
