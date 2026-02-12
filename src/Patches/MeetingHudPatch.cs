@@ -87,6 +87,12 @@ public static class MeetingHudPatch
                         return false;
                     }
                 }
+                if (!CustomRoleManager.CheckVoteOthers(voter, voted))
+                {
+                    __instance.RpcClearVote(voter.GetClientId());
+                    Logger.Info($"{voter.GetNameWithRole()} 的投票被清除", nameof(CastVotePatch));
+                    return false;
+                }
                 if (voter.GetRoleClass()?.CheckVoteAsVoter(voted) == false)
                 {
                     __instance.RpcClearVote(voter.GetClientId());

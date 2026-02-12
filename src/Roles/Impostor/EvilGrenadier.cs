@@ -150,7 +150,7 @@ public sealed class EvilGrenadier : RoleBase, IImpostor
     {
         var posi = Player.transform.position;
         var diss = Vector2.Distance(posi, pc.transform.position);
-        if (pc != Player && diss <= OptionSkillRange.GetFloat())
+        if (pc.IsAlive() && pc != Player && diss <= OptionSkillRange.GetFloat())
         {
             if (pc.IsModClient())
             {
