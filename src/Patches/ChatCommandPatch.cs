@@ -71,7 +71,7 @@ internal class ChatCommands
         if (mc.RecallMode == MsgRecallMode.Spam)
         {
             blockForLocalPlayer = true;
-            MessageControl.TryHideMessage(false, false);
+            if (!mc.Message.StartsWith("/cmd") || !GameStates.IsOnlineGame) MessageControl.TryHideMessage(false, false);
         }
 
         ChatUpdatePatch.DoBlockChat = false;
@@ -136,6 +136,15 @@ internal class UpdateCharCountPatch
             __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
         else
             __instance.charCountText.color = Color.red;
+    }
+}
+[HarmonyPatch(typeof(FreeChatInputField), nameof(FreeChatInputField.OnFieldChanged))]
+internal class OnFieldChangedPatch
+{
+    public static void Postfix(FreeChatInputField __instance)
+    {
+        __instance.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 999 : 300;
+        __instance.UpdateCharCount();
     }
 }
 [HarmonyPatch(typeof(ChatController), nameof(ChatController.AddChat))]
