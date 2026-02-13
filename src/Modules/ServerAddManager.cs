@@ -16,11 +16,8 @@ public static class ServerAddManager
 
         if (IsChineseUser)
         {
-            // regionInfos.Add(CreateHttp("au-cn.niko233.me", "Niko233(CN)", 443, true));
-            regionInfos.Add(CreateHttp("nb.8w.fan", "<color=#00FF00>新猫服</color><color=#ffff00>[宁波]</color>", 443, true));
-            regionInfos.Add(CreateHttp("bj.8w.fan", "<color=#9900CC>新猫服</color><color=#ffff00>[北京]</color>", 443, true));
-            regionInfos.Add(CreateHttp("suqian.xtreme.net.cn", "<color=#00ffff>方块</color><color=#FF44FF>宿迁私服</color>", 22028, true));
-            regionInfos.Add(CreateHttp("auhk.fangkuai.fun", "<color=#00ffff>方块</color><color=#FFC0CB>香港私服</color>", 443, true));
+            regionInfos.Add(CreateHttp("suqian.xtreme.net.cn", "<color=#cdfffd>XtremeWave</color>.<color=#8B658B>SuChien</color>", 22028, true));
+            regionInfos.Add(CreateHttp("imp.xtreme.net.cn", "<color=#cdfffd>XtremeWave</color>.<color=#FFFF00>HongKong</color>", 443, true));
         }
         regionInfos.Add(CreateHttp("au-as.duikbo.at", "Modded Asia (MAS)", 443, true));
         regionInfos.Add(CreateHttp("www.aumods.org", "Modded NA (MNA)", 443, true));
@@ -43,14 +40,11 @@ public static class ServerAddManager
             "Modded Asia (MAS)" => "MAS",
             "Modded NA (MNA)" => "MNA",
             "Modded EU (MEU)" => "MEU",
-            "<color=#00FF00>新猫服</color><color=#ffff00>[宁波]</color>" => "猫服[宁波]",
-            "<color=#9900CC>新猫服</color><color=#ffff00>[北京]</color>" => "猫服[北京]",
-            "<color=#00ffff>方块</color><color=#FF44FF>宿迁私服</color>" => "方块[宿迁]",
-            "<color=#00ffff>方块</color><color=#FFC0CB>香港私服</color>" => "方块[香港]",
+            "<color=#cdfffd>XtremeWave</color>.<color=#8B658B>SuChien</color>" => "XW[SQ]",
+            "<color=#cdfffd>XtremeWave</color>.<color=#FFFF00>HongKong</color>" => "XW[HK]",
             "Niko233(NA)" => "Niko[NA]",
             "Niko233(AS)" => "Niko[AS]",
             "Niko233(EU)" => "Niko[EU]",
-            "Niko233(CN)" => "Niko[CN]",
             _ => serverName,
         };
 
@@ -59,14 +53,11 @@ public static class ServerAddManager
             "Asia" => new(58, 166, 117, 255),
             "Europe" => new(58, 166, 117, 255),
             "North America" => new(58, 166, 117, 255),
-            "<color=#00FF00>新猫服</color><color=#ffff00>[宁波]</color>" => new(0, 255, 0, 255),
-            "<color=#9900CC>新猫服</color><color=#ffff00>[北京]</color>" => new(153, 0, 204, 255),
-            "<color=#00ffff>方块</color><color=#FF44FF>宿迁私服</color>" => new(0, 255, 255, 255),
-            "<color=#00ffff>方块</color><color=#FFC0CB>香港私服</color>" => new(0, 255, 255, 255),
+            "<color=#cdfffd>XtremeWave</color>.<color=#8B658B>SuChien</color>" => new(0, 255, 255, 255),
+            "<color=#cdfffd>XtremeWave</color>.<color=#FFFF00>HongKong</color>" => new(0, 255, 255, 255),
             "Niko233(NA)" => new(255, 224, 0, 255),
             "Niko233(AS)" => new(255, 224, 0, 255),
             "Niko233(EU)" => new(255, 224, 0, 255),
-            "Niko233(CN)" => new(255, 224, 0, 255),
             "Modded Asia (MAS)" => new(255, 132, 0, 255),
             "Modded NA (MNA)" => new(255, 132, 0, 255),
             "Modded EU (MEU)" => new(255, 132, 0, 255),
