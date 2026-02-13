@@ -24,8 +24,7 @@ public class Justice : RoleBase, IMeetingButton
     
     public Justice(PlayerControl player) : base(RoleInfo, player)
     {
-        CanUseTimes = OptionCanUseTimes.GetInt();
-        SelectedPlayers = new List<byte>();
+        SelectedPlayers = new List<byte>(2);
         CustomRoleManager.CheckVote.Add(CheckVoteOthers);
     }
 
@@ -34,21 +33,11 @@ public class Justice : RoleBase, IMeetingButton
     {
         JusticeCanUseTimes,
     }
-
-    public int CanUseTimes = 0;
-    public List<byte> SelectedPlayers = new();
-    private bool HasExecutedThisMeeting = false;
-    private int CurrentUses = 0;
-    public static bool JusticeScaleActive = false;
-    public static List<byte> JusticeScaleTargets = new();
-
-    private enum RoleRpcType
-    {
-        SyncAllState,
-        SetSelectedPlayers,
-        SetCurrentUses,
-        SetJusticeScaleActiveAndTargets
-    }
+    
+    private int SkillLimits;
+    public List<byte> SelectedPlayers;
+    public static byte JusticeScalePlayer = 255;
+    
 
     private static void SetupOptionItem()
     {
@@ -58,21 +47,15 @@ public class Justice : RoleBase, IMeetingButton
 
     public override void Add()
     {
-        CanUseTimes = OptionCanUseTimes.GetInt();
-        CurrentUses = CanUseTimes;
-        SelectedPlayers.Clear();
+        SkillLimits = OptionCanUseTimes.GetInt();
     }
 
     public override void OnStartMeeting()
     {
-        SelectedPlayers.Clear();
-        HasExecutedThisMeeting = false;
-        SendRPC_SyncAll();
-        
         if (Player.IsAlive())
         {
             Utils.SendMessage(
-                string.Format(GetString("JusticeUsesRemaining"), CurrentUses), 
+                string.Format(GetString("JusticeUsesRemaining"), SkillLimits), 
                 Player.PlayerId,
                 Utils.ColorString(Utils.GetRoleColor(CustomRoles.Justice), GetString("JusticeScaleTitle"))
             );
@@ -81,152 +64,77 @@ public class Justice : RoleBase, IMeetingButton
 
     public override void AfterMeetingTasks()
     {
-        if (JusticeScaleActive)
-        {
-            var target1 = JusticeScaleTargets[1];
-            var target2 = JusticeScaleTargets[2];
-            CheckTieExileBoth(target1, target2);
-        }
-        ResetJusticeScale();
         SelectedPlayers.Clear();
-        HasExecutedThisMeeting = false;
+        JusticeScalePlayer = 255;
+        SendRPC();
+    }
+
+    public override void OnExileWrapUp(NetworkedPlayerInfo exiled, ref bool DecidedWinner)
+    {
+        if (JusticeScalePlayer == 255) return;
+        if (!AmongUsClient.Instance.AmHost) return;
+        var result = MeetingVoteManager.Instance.CountVotes(true);
+        if (!result.IsTie) return;
+       
+        SelectedPlayers.Do(x => Utils.GetPlayerById(x).RpcExile());
     }
 
     public override void OverrideNameAsSeer(PlayerControl seen, ref string nameText, bool isForMeeting = false)
     {
-        if (Player.IsAlive() && isForMeeting)
-        {
-            nameText = Utils.ColorString(Utils.GetRoleColor(CustomRoles.Justice), seen.PlayerId.ToString()) + " " + nameText;
-        }
+        if (!Player.IsAlive() || !isForMeeting) return;
+        nameText = Utils.ColorString(RoleInfo.RoleColor, seen.PlayerId.ToString()) + " " + nameText;
     }
 
-    public override void OnFixedUpdate(PlayerControl player)
+    public override string GetMark(PlayerControl seer, PlayerControl seen = null, bool isForMeeting = false)
     {
-        if (JusticeScaleActive) 
-        {
-            var player1 = Utils.GetPlayerById(JusticeScaleTargets[0]);
-            var player2 = Utils.GetPlayerById(JusticeScaleTargets[1]);
-            
-            Utils.SendMessage(
-                string.Format(GetString("JusticeSpecialMeeting"), 
-                    player1.GetRealName(),
-                    player2.GetRealName()),
-                255,
-                Utils.ColorString(Utils.GetRoleColor(CustomRoles.Justice), GetString("JusticeScaleTitle"))
-            );
-            CheckJusticeScaleDeath(player1.PlayerId);
-            CheckJusticeScaleDeath(player2.PlayerId);
-        }
+        seen ??= seer;
+        if (SelectedPlayers.Contains(seen.PlayerId) && isForMeeting)
+            return Utils.ColorString(RoleInfo.RoleColor, "♦");
+        return "";
     }
 
     public static bool CheckVoteOthers(PlayerControl voter, PlayerControl voted)
     {
-        if (voter.IsAlive() && JusticeScaleActive && voted != null)
-        {
-            if (voted.PlayerId != 253 && !JusticeScaleTargets.Contains(voted.PlayerId))
-            {
-                Utils.SendMessage(GetString("JusticeVoteInvalid"), voter.PlayerId);
-                return false;
-            }
-        }
-        return true;
+        if (JusticeScalePlayer == 255) return true;
+        if (voted == null) return false;
+        var justiceRole = Utils.GetPlayerById(JusticeScalePlayer).GetRoleClass() as Justice;
+        if (justiceRole!.SelectedPlayers.Contains(voted.PlayerId)) return true;
+        Utils.SendMessage(GetString("JusticeVoteInvalid"), voter.PlayerId);
+        return false;
     }
 
-    private void SendRPC_SyncAll()
+    private void SendRPC()
     {
         using var sender = CreateSender();
-        sender.Writer.Write((byte)RoleRpcType.SetSelectedPlayers);
         sender.Writer.Write(SelectedPlayers.Count);
         foreach (var playerId in SelectedPlayers)
             sender.Writer.Write(playerId);
-        sender.Writer.Write(CurrentUses);
-        sender.Writer.Write(JusticeScaleActive);
-        sender.Writer.Write(JusticeScaleTargets.Count);
-        foreach (var targetId in JusticeScaleTargets)
-            sender.Writer.Write(targetId);
-    }
-    
-    private void SendRPC_SelectedPlayersChanged()
-    {
-        using var sender = CreateSender();
-        sender.Writer.Write((byte)RoleRpcType.SetSelectedPlayers);
-        sender.Writer.Write(SelectedPlayers.Count);
-        foreach (var id in SelectedPlayers) sender.Writer.Write(id);
-    }
-    
-    private void SendRPC_UsesChanged()
-    {
-        using var sender = CreateSender();
-        sender.Writer.Write((byte)RoleRpcType.SetCurrentUses);
-        sender.Writer.Write(CurrentUses);
-    }
-    
-    private void SendRPC_JusticeScaleChanged()
-    {
-        using var sender = CreateSender();
-        sender.Writer.Write((byte)RoleRpcType.SetJusticeScaleActiveAndTargets);
-        sender.Writer.Write(JusticeScaleActive);
-        sender.Writer.Write(JusticeScaleTargets.Count);
-        foreach (var id in JusticeScaleTargets) sender.Writer.Write(id);
+        sender.Writer.Write(JusticeScalePlayer);
     }
     
     public override void ReceiveRPC(MessageReader reader)
     {
-        var rpcType = (RoleRpcType)reader.ReadByte();
-        switch (rpcType)
-        {
-            case RoleRpcType.SyncAllState:
-                SelectedPlayers.Clear();
-                var count = reader.ReadInt32();
-                for (int i = 0; i < count; i++)
-                    SelectedPlayers.Add(reader.ReadByte());
-                CurrentUses = reader.ReadInt32();
-                JusticeScaleActive = reader.ReadBoolean();
-                JusticeScaleTargets.Clear();
-                var targetCount = reader.ReadInt32();
-                for (int i = 0; i < targetCount; i++)
-                    JusticeScaleTargets.Add(reader.ReadByte());
-                break;
-            
-            case RoleRpcType.SetSelectedPlayers:
-                SelectedPlayers.Clear();
-                var count2 = reader.ReadInt32();
-                for (int i = 0; i < count2; i++) SelectedPlayers.Add(reader.ReadByte());
-                break;
-            
-            case RoleRpcType.SetCurrentUses:
-                CurrentUses = reader.ReadInt32();
-                break;
-            
-            case RoleRpcType.SetJusticeScaleActiveAndTargets:
-                JusticeScaleActive = reader.ReadBoolean();
-                JusticeScaleTargets.Clear();
-                var targetCount2 = reader.ReadInt32();
-                for (int i = 0; i < targetCount2; i++) JusticeScaleTargets.Add(reader.ReadByte());
-                break;
-        }
+        var count = reader.ReadInt32();
+        SelectedPlayers = new List<byte>(count);
+        for (var i = 0; i < count; i++)
+            SelectedPlayers.Add(reader.ReadByte());
+        JusticeScalePlayer = reader.ReadByte();
     }
     
-    public string ButtonName { get; private set; } = "Scale";
-    public bool ShouldShowButton() => Player.IsAlive() && !HasExecutedThisMeeting && CurrentUses > 0;
-    public bool ShouldShowButtonFor(PlayerControl target) => !HasExecutedThisMeeting && CurrentUses > 0 && target.IsAlive();
+    public string ButtonName => "Scale";
+    public bool ShouldShowButton() => Show(Player);
+    public bool ShouldShowButtonFor(PlayerControl target) => Show(target);
 
+    private bool Show(PlayerControl player) => SelectedPlayers.Count != 2 && SkillLimits > 0 && player.IsAlive();
     public void OnClickButton(PlayerControl target)
     {
-        if (!TrySelectPlayer(target, out string reason))
+        if (!TrySelectPlayer(target, out var reason))
         {
             Player.ShowPopUp(reason);
             return;
         }
         
-        if (SelectedPlayers.Count == 2)
-        {
-            ExecuteScale();
-            HasExecutedThisMeeting = true;
-            CurrentUses--;
-            SendRPC_UsesChanged();
-            SendRPC_SelectedPlayersChanged();
-        }
+        CheckExecuteScale();
     }
 
     public void OnUpdateButton(MeetingHud meetingHud)
@@ -238,8 +146,11 @@ public class Justice : RoleBase, IMeetingButton
             
             if (SelectedPlayers.Contains(pva.TargetPlayerId))
                 btn.GetComponent<SpriteRenderer>().color = Color.yellow;
-            else if (SelectedPlayers.Count == 2 || HasExecutedThisMeeting || CurrentUses <= 0)
+            else if (SelectedPlayers.Count == 2 || SkillLimits <= 0)
+            {
                 btn.GetComponent<SpriteRenderer>().color = Color.gray;
+                btn.GetComponent<PassiveButton>().enabled = false;
+            }
             else
                 btn.GetComponent<SpriteRenderer>().color = Color.white;
         }
@@ -249,13 +160,7 @@ public class Justice : RoleBase, IMeetingButton
     {
         reason = string.Empty;
 
-        if (HasExecutedThisMeeting)
-        {
-            reason = GetString("JusticeAlreadyExecuted");
-            return false;
-        }
-
-        if (CurrentUses <= 0)
+        if (SkillLimits <= 0)
         {
             reason = GetString("JusticeLimitMax");
             return false;
@@ -263,43 +168,69 @@ public class Justice : RoleBase, IMeetingButton
 
         if (SelectedPlayers.Count >= 2)
         {
-            reason = GetString("JusticeAlreadySelectedTwo");
+            reason = GetString("JusticeAlreadyExecuted");
             return false;
         }
         
-        if (SelectedPlayers.Contains(target.PlayerId))
+        if (target == null)
         {
-            reason = GetString("JusticePlayerAlreadySelected");
+            reason = GetString("JusticePlayerNotFound");
             return false;
         }
 
+        if (!target.IsAlive())
+        {
+            reason = GetString("JusticeTargetDead");
+            return false;
+        }
+
+        if (SelectedPlayers.Contains(target.PlayerId))
+        {
+            SelectedPlayers.Remove(target.PlayerId);
+            SendRPC();
+            reason = GetString("JusticeSamePlayer");
+            return true;
+        }
+
         SelectedPlayers.Add(target.PlayerId);
-        SendRPC_SelectedPlayersChanged();
-        
-        if (SelectedPlayers.Count == 1)
-        {
-            Player.ShowPopUp(string.Format(GetString("JusticeFirstSelected"), target.GetRealName()));
-        }
-        else
-        {
-            Player.ShowPopUp(string.Format(GetString("JusticeScaleEstablished"), 
-                Utils.GetPlayerById(SelectedPlayers[0]).GetRealName(), 
-                target.GetRealName()));
-        }
+        SendRPC();
         
         return true;
     }
-    
-    private void ExecuteScale()
+    private static string MsgToPlayersByID(string msg, out PlayerControl player)
     {
+        player = null;
+        
+        var parts = msg.Split(' ');
+        if (parts.Length < 2)
+        {
+            return GetString("JusticeCommandFormatError");
+        }
+        
+        if (!byte.TryParse(parts[1], out var playerId))
+        {
+            return GetString("JusticeInvalidPlayerId");
+        }
+        
+        player = Utils.GetPlayerById(playerId);
+
+        return null;
+    }
+    private void CheckExecuteScale()
+    {
+        if (SelectedPlayers.Count != 2) return;
+        Player.ShowPopUp(string.Format(GetString("JusticeScaleEstablished")));
+        SkillLimits--;
         var player1 = Utils.GetPlayerById(SelectedPlayers[0]);
         var player2 = Utils.GetPlayerById(SelectedPlayers[1]);
-        
-        SetJusticeScaleTargets(SelectedPlayers[0], SelectedPlayers[1]);
+
+        JusticeScalePlayer = Player.PlayerId;
         
         MeetingVoteManager.Instance.ClearVotes();
         MeetingTimeManager.Init();
+
         
+
         _ = new LateTask(() =>
         {
             Utils.SendMessage(
@@ -308,187 +239,115 @@ public class Justice : RoleBase, IMeetingButton
                 255,
                 Utils.ColorString(Utils.GetRoleColor(CustomRoles.Justice), GetString("JusticeScaleTitle"))
             );
+            foreach (var player in Main.AllPlayerControls)
+            {
+                player.KillFlash();
+            }
         }, 0.5f, "Justice Scale Announcement");
     }
     
     public override bool OnSendMessage(string msg, out MsgRecallMode recallMode)
     {
-        bool isCommand = JusticeMsg(Player, msg, out bool spam);
+        var isCommand = JusticeMsg(msg, out var spam);
         recallMode = spam ? MsgRecallMode.Spam : MsgRecallMode.None;
         return isCommand;
     }
 
-    private bool JusticeMsg(PlayerControl pc, string msg, out bool spam)
+    private bool JusticeMsg(string msg, out bool spam)
     {
         spam = false;
-        if (!GameStates.IsInGame || pc == null) return false;
-        if (!pc.Is(CustomRoles.Justice)) return false;
+        if (!GameStates.IsInGame || Player == null) return false;
+        if (!Player.Is(CustomRoles.Justice)) return false;
 
         int operate;
         msg = msg.ToLower().TrimStart().TrimEnd();
         if (ChatCommand.MatchCommand(ref msg, "id|guesslist|gl编号|玩家编号|玩家id|id列表|玩家列表|列表|所有id|全部id")) 
             operate = 1;
-        else if (ChatCommand.MatchCommand(ref msg, "scale|天平|审判|jtc", false))
+        else if (ChatCommand.MatchCommand(ref msg, "scale|天平|审判|jtc|sc", false))
             operate = 2;
         else 
             return false;
 
-        if (!pc.IsAlive())
+        if (!Player.IsAlive())
         {
-            Utils.SendMessage(GetString("JusticeDead"), pc.PlayerId);
+            Utils.SendMessage(GetString("JusticeDead"), Player.PlayerId);
             return true;
         }
-        if (operate == 1)
-        {
-            Utils.SendMessage(ChatCommand.GetFormatString(false,true), pc.PlayerId);
-            return true;
-        }
-        if (operate == 2)
-        {
-            spam = true;
-            if (!AmongUsClient.Instance.AmHost) return true;
 
-            if (CurrentUses <= 0)
+        switch (operate)
+        {
+            case 1:
+                Utils.SendMessage(ChatCommand.GetFormatString(false, true), Player.PlayerId);
+                break;
+            case 2:
             {
-                Utils.SendMessage(GetString("JusticeLimitMax"), pc.PlayerId);
-                return true;
+                spam = true;
+                if (!AmongUsClient.Instance.AmHost) return true;
+
+                if (SkillLimits <= 0)
+                {
+                    Utils.SendMessage(GetString("JusticeLimitMax"), Player.PlayerId);
+                    return true;
+                }
+
+                if (SelectedPlayers.Count == 2)
+                {
+                    Utils.SendMessage(GetString("JusticeAlreadyExecuted"), Player.PlayerId);
+                    return true;
+                }
+
+                var reason = MsgToPlayersByID(msg, out var player);
+                if (!string.IsNullOrEmpty(reason))
+                {
+                    Utils.SendMessage(reason, Player.PlayerId);
+                    return true;
+                }
+
+                if (!TrySelectPlayer(player, out var r))
+                {
+                    Utils.SendMessage(r);
+                    return true;
+                }
+
+                CheckExecuteScale();
+                break;
             }
-
-            if (HasExecutedThisMeeting)
-            {
-                Utils.SendMessage(GetString("JusticeAlreadyExecuted"), pc.PlayerId);
-                return true;
-            }
-
-            if (!MsgToPlayersByID(msg, out PlayerControl player1, out PlayerControl player2, out string error))
-            {
-                Utils.SendMessage(error, pc.PlayerId);
-                return true;
-            }
-
-            if (!CheckAble(player1, player2))
-                return true;
-
-            SelectedPlayers.Clear();
-            SelectedPlayers.Add(player1.PlayerId);
-            SelectedPlayers.Add(player2.PlayerId);
-            
-            ExecuteScale();
-            HasExecutedThisMeeting = true;
-            CurrentUses--;
-            SendRPC_UsesChanged();
-            SendRPC_JusticeScaleChanged();
-        }
-        return true;
-    }
-    
-    private static bool MsgToPlayersByID(string msg, out PlayerControl player1, out PlayerControl player2, out string error)
-    {
-        player1 = null;
-        player2 = null;
-        error = string.Empty;
-        
-        string[] parts = msg.Split(' ');
-        if (parts.Length < 3)
-        {
-            error = GetString("JusticeCommandFormatError");
-            return false;
-        }
-        
-        if (!byte.TryParse(parts[1], out byte player1Id))
-        {
-            error = GetString("JusticeInvalidPlayerId");
-            return false;
-        }
-        
-        if (!byte.TryParse(parts[2], out byte player2Id))
-        {
-            error = GetString("JusticeInvalidPlayerId");
-            return false;
-        }
-        
-        player1 = Utils.GetPlayerById(player1Id);
-        player2 = Utils.GetPlayerById(player2Id);
-
-        if (player1 == null || player2 == null)
-        {
-            error = GetString("JusticePlayerNotFound");
-            return false;
         }
 
         return true;
     }
 
-    private bool CheckAble(PlayerControl player1, PlayerControl player2)
-    {
-        if (player1.PlayerId == player2.PlayerId)
-        {
-            Utils.SendMessage(GetString("JusticeSamePlayer"), Player.PlayerId);
-            return false;
-        }
-
-        if (!player1.IsAlive())
-        {
-            Utils.SendMessage(GetString("JusticeTargetDead"), Player.PlayerId);
-            return false;
-        }
-
-        if (!player2.IsAlive())
-        {
-            Utils.SendMessage(GetString("JusticeTargetDead"), Player.PlayerId);
-            return false;
-        }
-
-        return true;
-    }
     
-    public static void SetJusticeScaleTargets(byte target1, byte target2)
+
+    public override void OnPlayerDeath(PlayerControl player, CustomDeathReason deathReason, bool isOnMeeting = false)
     {
-        JusticeScaleActive = true;
-        JusticeScaleTargets.Clear();
-        JusticeScaleTargets.Add(target1);
-        JusticeScaleTargets.Add(target2);
-    }
-    
-    public static void ResetJusticeScale()
-    {
-        JusticeScaleActive = false;
-        JusticeScaleTargets.Clear();
-    }
-    
-    public static void CheckJusticeScaleDeath(byte deadPlayerId)
-    {
-        var deadPlayer = Utils.GetPlayerById(deadPlayerId);
-        var survivorId = JusticeScaleTargets.Find(x => x != deadPlayerId);
-        var survivor = Utils.GetPlayerById(survivorId);
+        if (!isOnMeeting) return;
+
+        if (player.PlayerId == JusticeScalePlayer)
+        {
+            JusticeScalePlayer = 255;
+            SendRPC();
+            return;
+        }
+        if (JusticeScalePlayer == 255)
+        {
+            SelectedPlayers.Remove(player.PlayerId);
+            SendRPC();
+            return;
+        }
         
-        if (!deadPlayer.IsAlive() && JusticeScaleActive && JusticeScaleTargets.Contains(deadPlayerId) && MeetingHud.Instance != null)
-        {
-            
-            if (survivor != null && survivor.IsAlive())
-            {
-                MeetingVoteManager.Instance.ClearAndExile(deadPlayerId,survivorId);
-                Utils.SendMessage(
-                    string.Format(GetString("JusticeScaleDeathResult"), 
-                        Utils.GetPlayerById(deadPlayerId).GetRealName(),
-                        survivor.GetRealName()),
-                    255,
-                    Utils.ColorString(Utils.GetRoleColor(CustomRoles.Justice), GetString("JusticeScaleTitle"))
-                );
-            }
-            ResetJusticeScale();
-        }
+        if (!SelectedPlayers.Contains(player.PlayerId)) return;
+        
+        var survivorId = SelectedPlayers.Find(x => x != player.PlayerId);
+        MeetingVoteManager.Instance.ClearAndExile(player.PlayerId,survivorId);
+        Utils.SendMessage(
+            string.Format(GetString("JusticeScaleDeathResult"), 
+                player.GetRealName(),
+                Utils.GetPlayerById(survivorId).GetRealName()),
+            255,
+            Utils.ColorString(Utils.GetRoleColor(CustomRoles.Justice), GetString("JusticeScaleTitle"))
+        );
     }
 
-    public static void CheckTieExileBoth(byte target1, byte target2)
-    {
-        var result = MeetingVoteManager.Instance.CountVotes(true);
-        var player1 = Utils.GetPlayerById(target1);
-        var player2 = Utils.GetPlayerById(target2);
-        if (result.IsTie)
-        {
-            player1.RpcExile();
-            player2.RpcExile();
-        }
-    }
+
 }
