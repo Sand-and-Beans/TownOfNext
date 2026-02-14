@@ -64,33 +64,21 @@ public class Justice : RoleBase, IMeetingButton
 
     public override void AfterMeetingTasks()
     {
+        if (JusticeScalePlayer == 255 || !AmongUsClient.Instance.AmHost)
+        {
+            var result = MeetingVoteManager.Instance.CountVotes(true);
+            if (result.IsTie)
+                SelectedPlayers.Do(x => Utils.GetPlayerById(x).RpcExile());
+        }
         SelectedPlayers.Clear();
         JusticeScalePlayer = 255;
         SendRPC();
-    }
-
-    public override void OnExileWrapUp(NetworkedPlayerInfo exiled, ref bool DecidedWinner)
-    {
-        if (JusticeScalePlayer == 255) return;
-        if (!AmongUsClient.Instance.AmHost) return;
-        var result = MeetingVoteManager.Instance.CountVotes(true);
-        if (!result.IsTie) return;
-       
-        SelectedPlayers.Do(x => Utils.GetPlayerById(x).RpcExile());
     }
 
     public override void OverrideNameAsSeer(PlayerControl seen, ref string nameText, bool isForMeeting = false)
     {
         if (!Player.IsAlive() || !isForMeeting) return;
         nameText = Utils.ColorString(RoleInfo.RoleColor, seen.PlayerId.ToString()) + " " + nameText;
-    }
-
-    public override string GetMark(PlayerControl seer, PlayerControl seen = null, bool isForMeeting = false)
-    {
-        seen ??= seer;
-        if (SelectedPlayers.Contains(seen.PlayerId) && isForMeeting)
-            return Utils.ColorString(RoleInfo.RoleColor, "♦");
-        return "";
     }
 
     public static bool CheckVoteOthers(PlayerControl voter, PlayerControl voted)
@@ -225,12 +213,12 @@ public class Justice : RoleBase, IMeetingButton
         var player2 = Utils.GetPlayerById(SelectedPlayers[1]);
 
         JusticeScalePlayer = Player.PlayerId;
-        
-        MeetingVoteManager.Instance.ClearVotes();
-        MeetingTimeManager.Init();
 
+        MeetingHud.Instance.RpcForceEndMeeting();
+        _ = new LateTask(() =>
+        {
+        PlayerControl.LocalPlayer.NoCheckStartMeeting(null, true);
         
-
         _ = new LateTask(() =>
         {
             Utils.SendMessage(
@@ -244,6 +232,7 @@ public class Justice : RoleBase, IMeetingButton
                 player.KillFlash();
             }
         }, 0.5f, "Justice Scale Announcement");
+        }, 2f, "Justice Scale Announcement");
     }
     
     public override bool OnSendMessage(string msg, out MsgRecallMode recallMode)
