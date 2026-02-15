@@ -3,6 +3,63 @@ using TMPro;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace TONX.Patches.Crowded;
+
+[HarmonyPatch]
+internal static class MinigamePaginationPatches
+{
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start))]
+    [HarmonyPostfix]
+    private static void AddMeetingPagination(MeetingHud __instance)
+    {
+        if (__instance == null) return;
+        if (GameOptionsManager.Instance?.CurrentGameOptions?.MaxPlayers <= GameOptionsExtension.VANILLA_MAX_PLAYERS) return;
+            
+        var existing = __instance.gameObject.GetComponent<MeetingUIPaginator>();
+        if (existing != null) GameObject.Destroy(existing);
+            
+        var paginator = __instance.gameObject.AddComponent<MeetingUIPaginator>();
+        paginator.MeetingHud = __instance;
+    }
+        
+    [HarmonyPatch(typeof(ShapeshifterMinigame), nameof(ShapeshifterMinigame.Begin))]
+    [HarmonyPostfix]
+    private static void AddShapeshifterPagination(ShapeshifterMinigame __instance)
+    {
+        if (__instance == null) return;
+        if (GameOptionsManager.Instance?.CurrentGameOptions?.MaxPlayers <= GameOptionsExtension.VANILLA_MAX_PLAYERS) return;
+            
+        var existing = __instance.gameObject.GetComponent<ShapeshifterUIPaginator>();
+        if (existing != null) GameObject.Destroy(existing);
+            
+        var paginator = __instance.gameObject.AddComponent<ShapeshifterUIPaginator>();
+        paginator.Minigame = __instance;
+    }
+        
+    [HarmonyPatch(typeof(VitalsMinigame), nameof(VitalsMinigame.Begin))]
+    [HarmonyPostfix]
+    private static void AddVitalsPagination(VitalsMinigame __instance)
+    {
+        if (__instance == null) return;
+        if (GameOptionsManager.Instance?.CurrentGameOptions?.MaxPlayers <= GameOptionsExtension.VANILLA_MAX_PLAYERS) return;
+            
+        var existing = __instance.gameObject.GetComponent<VitalsUIPaginator>();
+        if (existing != null) GameObject.Destroy(existing);
+            
+        var paginator = __instance.gameObject.AddComponent<VitalsUIPaginator>();
+        paginator.Minigame = __instance;
+    }
+
+    [HarmonyPatch(typeof(SecurityLogger), nameof(SecurityLogger.Awake))]
+    [HarmonyPostfix]
+    private static void ExtendTimerArray(ref SecurityLogger __instance)
+    {
+        if (__instance != null)
+        {
+            __instance.Timers = new Il2CppStructArray<float>(GameOptionsExtension.EXTENDED_MAX_PLAYERS);
+        }
+    }
+}
+
 public class MeetingUIPaginator : UIPaginationController
 {
     public MeetingHud MeetingHud { get; set; }
@@ -25,6 +82,12 @@ public class MeetingUIPaginator : UIPaginationController
             return _cachedMaxPage;
         }
     }
+    
+    protected override void Initialize()
+    {
+        base.Initialize();
+    }
+    
     protected override void RefreshPageContent()
     {
         if (MeetingHud == null) return;
@@ -35,8 +98,9 @@ public class MeetingUIPaginator : UIPaginationController
         for (int i = 0; i < players.Length; i++)
         {
             var playerArea = players[i];
+            if (playerArea == null) continue;
+            
             bool shouldShow = i >= startIndex && i < startIndex + ItemsPerPage;
-                
             playerArea.gameObject.SetActive(shouldShow);
                 
             if (shouldShow)
@@ -51,11 +115,9 @@ public class MeetingUIPaginator : UIPaginationController
                                           MeetingHud.VoteButtonOffsets.y * row,
                                           playerArea.transform.localPosition.z
                                       );
-                    
                 playerArea.transform.localPosition = newPosition;
             }
         }
-            
         UpdateMeetingTimerDisplay();
     }
         
@@ -93,10 +155,19 @@ public class ShapeshifterUIPaginator : UIPaginationController
         
     protected override void Initialize()
     {
-        _pageIndicator = CreatePageIndicator(
-            Minigame.transform,
-            new Vector3(4.1f, -2.36f, -1f)
-        );
+        if (Minigame != null && DestroyableSingleton<HudManager>.InstanceExists)
+        {
+            var sourceText = DestroyableSingleton<HudManager>.Instance.KillButton.cooldownTimerText;
+            if (sourceText != null)
+            {
+                _pageIndicator = Instantiate(sourceText, Minigame.transform);
+                _pageIndicator.name = "UI_PageIndicator";
+                _pageIndicator.enableWordWrapping = false;
+                _pageIndicator.gameObject.SetActive(true);
+                _pageIndicator.transform.localPosition = new Vector3(4.1f, -2.36f, -1f);
+                _pageIndicator.transform.localScale *= 0.5f;
+            }
+        }
         base.Initialize();
     }
         
@@ -110,10 +181,12 @@ public class ShapeshifterUIPaginator : UIPaginationController
         for (int i = 0; i < targets.Length; i++)
         {
             var panel = targets[i];
+            if (panel == null) continue;
+            
             bool shouldShow = i >= startIndex && i < startIndex + ItemsPerPage;
             panel.gameObject.SetActive(shouldShow);
                 
-            if (shouldShow)
+            if (shouldShow && Minigame != null)
             {
                 int pageIndex = i - startIndex;
                 int row = pageIndex / 3;
@@ -142,18 +215,29 @@ public class VitalsUIPaginator : UIPaginationController
         
     protected override void Initialize()
     {
-        _pageIndicator = CreatePageIndicator(
-            Minigame.transform,
-            new Vector3(2.7f, -2f, -1f)
-        );
+        if (Minigame != null && DestroyableSingleton<HudManager>.InstanceExists)
+        {
+            var sourceText = DestroyableSingleton<HudManager>.Instance.KillButton.cooldownTimerText;
+            if (sourceText != null)
+            {
+                _pageIndicator = Instantiate(sourceText, Minigame.transform);
+                _pageIndicator.name = "UI_PageIndicator";
+                _pageIndicator.enableWordWrapping = false;
+                _pageIndicator.gameObject.SetActive(true);
+                _pageIndicator.transform.localPosition = new Vector3(2.7f, -2f, -1f);
+                _pageIndicator.transform.localScale *= 0.5f;
+            }
+        }
         base.Initialize();
     }
         
     protected override void RefreshPageContent()
     {
-        // 检查是否受到HudOverrideTask影响
-        bool hasHudOverride = PlayerTask.PlayerHasTaskOfType<HudOverrideTask>(PlayerControl.LocalPlayer);
-        if (hasHudOverride) return;
+        if (PlayerControl.LocalPlayer != null && 
+            PlayerTask.PlayerHasTaskOfType<HudOverrideTask>(PlayerControl.LocalPlayer))
+        {
+            return;
+        }
             
         UpdatePageIndicator(_pageIndicator);
             
@@ -163,10 +247,12 @@ public class VitalsUIPaginator : UIPaginationController
         for (int i = 0; i < panels.Length; i++)
         {
             var panel = panels[i];
+            if (panel == null) continue;
+            
             bool shouldShow = i >= startIndex && i < startIndex + ItemsPerPage;
             panel.gameObject.SetActive(shouldShow);
                 
-            if (shouldShow)
+            if (shouldShow && Minigame != null)
             {
                 int pageIndex = i - startIndex;
                 int row = pageIndex / 3;
@@ -179,48 +265,5 @@ public class VitalsUIPaginator : UIPaginationController
                 );
             }
         }
-    }
-}
-
-[HarmonyPatch]
-internal static class MinigamePaginationPatches
-{
-    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start))]
-    [HarmonyPostfix]
-    private static void AddMeetingPagination(MeetingHud __instance)
-    {
-        if (GameOptionsManager.Instance.CurrentGameOptions.MaxPlayers <= 15) return;
-            
-        var paginator = __instance.gameObject.AddComponent<MeetingUIPaginator>();
-        paginator.MeetingHud = __instance;
-    }
-        
-    [HarmonyPatch(typeof(ShapeshifterMinigame), nameof(ShapeshifterMinigame.Begin))]
-    [HarmonyPostfix]
-    private static void AddShapeshifterPagination(ShapeshifterMinigame __instance)
-    {
-        if (GameOptionsManager.Instance.CurrentGameOptions.MaxPlayers <= 15) return;
-            
-        var paginator = __instance.gameObject.AddComponent<ShapeshifterUIPaginator>();
-        paginator.Minigame = __instance;
-    }
-        
-    [HarmonyPatch(typeof(VitalsMinigame), nameof(VitalsMinigame.Begin))]
-    [HarmonyPostfix]
-    private static void AddVitalsPagination(VitalsMinigame __instance)
-    {
-        if (GameOptionsManager.Instance.CurrentGameOptions.MaxPlayers <= 15) return;
-            
-        var paginator = __instance.gameObject.AddComponent<VitalsUIPaginator>();
-        paginator.Minigame = __instance;
-    }
-}
-[HarmonyPatch(typeof(SecurityLogger), "Awake")]
-internal static class SecurityLoggerPatch
-{
-    [HarmonyPostfix]
-    private static void ExtendTimerArray(ref SecurityLogger __instance)
-    {
-        __instance.Timers = new Il2CppStructArray<float>(GameOptionsExtension.EXTENDED_MAX_PLAYERS);
     }
 }

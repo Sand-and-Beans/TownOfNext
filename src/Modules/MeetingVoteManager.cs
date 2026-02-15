@@ -201,6 +201,13 @@ public class MeetingVoteManager
             }
             ConfirmEjections.Apply(result.Exiled, DecidedWinner, WinDescriptionText);
         }
+        else
+        {
+            foreach (var roleClass in CustomRoleManager.AllActiveRoles.Values.ToList())
+            {
+                roleClass.CheckTie(result);
+            }
+        }
         Destroy();
     }
     /// <summary>

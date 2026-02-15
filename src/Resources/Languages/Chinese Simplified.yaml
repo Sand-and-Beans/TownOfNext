@@ -1303,6 +1303,7 @@ JusticeTargetDead: "目标玩家已死亡"
 JusticeScaleAnnouncement: "审判开始！所有玩家只能在 【{0}】 和 【{1}】 之间投票\n平票将同时驱逐两人！"
 JusticeVoteInvalid: "特殊会议期间只能投票给被审判的玩家"
 JusticeScaleDeathResult: "玩家【{0}】已死亡，没有任何选择，决定驱逐【{1}】"
+JusticeScaleBanAbility: "正在进行特殊会议，只能对会议上被选中的玩家发动技能！"
 
 # 信息 / Messages
 Message.SetToSeconds: "信息发送冷却时间为【{0}】秒"

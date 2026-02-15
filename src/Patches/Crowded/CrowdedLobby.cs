@@ -11,14 +11,13 @@ internal static class LobbyCreationPatches
     [HarmonyPrefix]
     private static void ValidateBeforeHost()
     {
-            
         if (GameStates.IsVanillaServer && !GameStates.IsLocalGame)
         {
-            var hostOptions = GameOptionsManager.Instance.GameHostOptions;
+            var hostOptions = GameOptionsManager.Instance?.GameHostOptions;
             if (hostOptions != null)
             {
                 hostOptions.SetInt(Int32OptionNames.MaxPlayers, 
-                    Mathf.Min(hostOptions.MaxPlayers, 15));
+                    Mathf.Min(hostOptions.MaxPlayers, GameOptionsExtension.VANILLA_MAX_PLAYERS));
                 hostOptions.SetInt(Int32OptionNames.NumImpostors, 
                     Mathf.Min(hostOptions.NumImpostors, 3));
             }

@@ -116,6 +116,13 @@ public sealed class Swapper : RoleBase, IMeetingButton
         }
         else
         {
+            if (Justice.IsJusticeScale &&
+                !(Utils.GetPlayerById(Justice.JusticeScalePlayer).GetRoleClass() as Justice).SelectedPlayers
+                     .Contains(target.PlayerId))
+            {
+                reason = GetString("JusticeScaleBanAbility");
+                return false;
+            }
             if (Targets.Count == 2)
             {
                 reason = GetString("SwapUsed");

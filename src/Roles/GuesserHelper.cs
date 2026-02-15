@@ -2,6 +2,7 @@
 using TMPro;
 using TONX.Modules;
 using TONX.Roles.Core.Interfaces;
+using TONX.Roles.Crewmate;
 using UnityEngine;
 
 namespace TONX;
@@ -49,6 +50,13 @@ public static class GuesserHelper
 
         bool guesserSuicide = false;
         if (guesser.GetRoleClass() is not IGuesser gc) return false;
+        if (Justice.IsJusticeScale &&
+            !(Utils.GetPlayerById(Justice.JusticeScalePlayer).GetRoleClass() as Justice).SelectedPlayers
+                .Contains(target.PlayerId))
+        {
+            reason = GetString("JusticeScaleBanAbility");
+            return false;
+        }
         if (gc.GuessLimit < 1)
         {
             reason = GetString(gc.GuessMaxMsg);

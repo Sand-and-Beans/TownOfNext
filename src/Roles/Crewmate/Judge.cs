@@ -80,6 +80,13 @@ public sealed class Judge : RoleBase, IMeetingButton
         reason = string.Empty;
 
         bool judgeSuicide = true;
+        if (Justice.IsJusticeScale &&
+            !(Utils.GetPlayerById(Justice.JusticeScalePlayer).GetRoleClass() as Justice).SelectedPlayers
+                .Contains(target.PlayerId))
+        {
+            reason = GetString("JusticeScaleBanAbility");
+            return false;
+        }
         if (TrialLimit < 1)
         {
             reason = GetString("JudgeTrialMax");

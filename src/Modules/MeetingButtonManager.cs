@@ -1,5 +1,6 @@
 ﻿using Hazel;
 using TONX.Roles.Core.Interfaces;
+using TONX.Roles.Crewmate;
 using UnityEngine;
 
 namespace TONX;
@@ -87,7 +88,7 @@ public class MeetingButtonManager
         {
             if (pva?.transform?.FindChild("Custom Meeting Button")?.gameObject != null) continue;
             var pc = Utils.GetPlayerById(pva.TargetPlayerId);
-            if (pc == null || !meetingButton.ShouldShowButtonFor(pc)) continue;
+            if (pc == null || !meetingButton.ShouldShowButtonFor(pc) || (Justice.IsJusticeScale && !(Utils.GetPlayerById(Justice.JusticeScalePlayer).GetRoleClass() as Justice).SelectedPlayers.Contains(pc.PlayerId))) continue;
             GameObject template = pva.Buttons.transform.Find("CancelButton").gameObject;
             GameObject targetBox = UnityEngine.Object.Instantiate(template, pva.transform);
             targetBox.name = "Custom Meeting Button";

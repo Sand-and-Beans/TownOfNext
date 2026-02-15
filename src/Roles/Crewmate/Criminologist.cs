@@ -147,6 +147,15 @@ public class Criminologist : RoleBase, IMeetingButton
             return false;
         }
 
+        if (Justice.IsJusticeScale &&
+            (!(Utils.GetPlayerById(Justice.JusticeScalePlayer).GetRoleClass() as Justice).SelectedPlayers
+                .Contains(target.PlayerId) || 
+            !(Utils.GetPlayerById(Justice.JusticeScalePlayer).GetRoleClass() as Justice).SelectedPlayers
+                .Contains(killer.PlayerId)))
+        {
+            reason = GetString("JusticeScaleBanAbility");
+            return false;
+        }
         if (Is(killer))
         {
             if (!isUi) Utils.SendMessage(GetString("VerifySuicideMessage"), Player.PlayerId, Utils.ColorString(Color.cyan, GetString("MessageFromKPD")));
