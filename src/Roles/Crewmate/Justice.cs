@@ -65,13 +65,17 @@ public class Justice : RoleBase, IMeetingButton
 
     public override void AfterMeetingTasks()
     {
+        Logger.Test("下面进行执行AfterMeetingTasks","AfterMeetingTasks");
         if (IsJusticeScale)
         {
+            Logger.Info("下面检测AmHost","AfterMeetingTasks");
             if (AmongUsClient.Instance.AmHost)
             {
+                Logger.Info("下面检测Tie","AfterMeetingTasks");
                 var result = MeetingVoteManager.Instance.CountVotes(true);
                 if (result.IsTie)
                 {
+                    Logger.Info("是Tie","AfterMeetingTasks");
                     SelectedPlayers.Do(x => Utils.GetPlayerById(x).RpcExile());
                 }
             }
@@ -81,6 +85,7 @@ public class Justice : RoleBase, IMeetingButton
         }
         else if (JusticeScalePlayer != 255)
         {
+            Logger.Info("JusticeScalePlayer不是255","AfterMeetingTasks");
             IsJusticeScale = true;
         }
         else
@@ -88,6 +93,7 @@ public class Justice : RoleBase, IMeetingButton
             SelectedPlayers.Clear();
         }
         SendRPC();
+        Logger.Info("RPC发完了","AfterMeetingTasks");
     }
 
     public override void OverrideNameAsSeer(PlayerControl seen, ref string nameText, bool isForMeeting = false)
@@ -138,7 +144,6 @@ public class Justice : RoleBase, IMeetingButton
             Player.ShowPopUp(reason);
             return;
         }
-        
         CheckExecuteScale();
     }
 
@@ -248,7 +253,7 @@ public class Justice : RoleBase, IMeetingButton
                     player.KillFlash();
                 }
             }, 0.5f, "Justice Scale Announcement");
-        }, 2f, "Justice Scale Announcement");
+        }, 10f, "Justice Scale Announcement");
     }
     
     public override bool OnSendMessage(string msg, out MsgRecallMode recallMode)
