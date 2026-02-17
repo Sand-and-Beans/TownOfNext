@@ -36,8 +36,9 @@ public class Main : BasePlugin
     public static readonly bool IsPublicAvailableOnThisVersion = false;
     public const string PluginVersion = "4.0.0";
     public const int PluginCreation = 1;
+    public const VersionType VerType = VersionType.Canary;
     // == 链接相关设定 / Link Config ==
-    public static readonly bool ShowWebsiteButton = false;
+    public static readonly bool ShowWebsiteButton = true;
     public static readonly string WebsiteUrl = IsChineseLanguageUser ? "https://tonx.cc/zh" : "https://tonx.cc";
     public static readonly bool ShowQQButton = false;
     public static readonly string QQInviteUrl = "https://jq.qq.com/?_wv=1027&k=2RpigaN6";
@@ -45,6 +46,9 @@ public class Main : BasePlugin
     public static readonly string DiscordInviteUrl = "https://discord.gg/hkk2p9ggv4";
     public static readonly bool ShowGithubUrl = true;
     public static readonly string GithubRepoUrl = "https://github.com/TownOfNext/TownOfNext";
+    // == 百人相关设定 / Crowded Config == 
+    public const int MaxPlayers = 36;
+    public const int MaxImpostors = 36 / 2;
     // ==========
 
     public Harmony Harmony { get; } = new Harmony(PluginGuid);
@@ -322,6 +326,10 @@ public class Main : BasePlugin
         else ConsoleManager.CreateConsole();
 
         ModUpdater.RecordVisit();
+        
+        NormalGameOptionsV09.RecommendedImpostors = NormalGameOptionsV09.MaxImpostors = Enumerable.Repeat(36, 36).ToArray();
+        NormalGameOptionsV09.MinPlayers = Enumerable.Repeat(4, 36).ToArray();
+        HideNSeekGameOptionsV09.MinPlayers = Enumerable.Repeat(4, 36).ToArray();
 
         TONX.Logger.Msg("========= TONX loaded! =========", "Plugin Load");
     }
@@ -420,4 +428,14 @@ public enum OutfitType
     NormalMode,
     HorseMode,
     LongMode
+}
+
+public enum VersionType
+{
+    Release,
+    Canary,
+    Beta,
+    Snapshot,
+    Preview,
+    Broken
 }

@@ -5,30 +5,37 @@
 #Date:2025-11-30T00:00:00Z
 #-----------------------------
 
-## Base
-- Base on AmongUs v17.1.0
-- Base on TOH v5.1.14
+## Corresponding Official Versions
+- Based on AmongUs v17.1.0
+- Based on TOH v5.1.14
 
 ## Warning
-- Create/join public lobbies is temporarily unavailable
-- This change is due to a server-side update that makes modded public lobbies unavailable for vanilla. Private lobbies are not affected.
+- Currently, creating or joining public rooms is unavailable due to server-side updates that make modified public rooms incompatible with the base game. Private rooms remain unaffected.
 
 ## What You Need to Know
-- We refactored codes related to custom game modes
-- TONX may have a lot of bugs. If possible, please report bugs in time and attach logs.
+- We have refactored the code related to game modes.
+- Upcoming versions of TONX may contain numerous bugs. Please report any bugs you encounter promptly and include logs if possible.
 
-## Fix
-- Fix a bug where the Collator's skill cooldown is not reset correctly
-- Fix a bug where players' pets disappear after being revived
-- Fix a bug where some roles can not pick players by typing color names in the command
-- Fix a bug where the text of the version shower is duplicated
+## Fixes
+- Fixed incorrect cooldown for the Surveyor's ability
+- Fixed pets disappearing after a player is revived
+- Fixed the inability to select players via color input for certain role commands
+- Fixed duplicate display of mod usage count
+- Fixed incorrect language for some game setting options
+- Fixed the `/color` command failing under certain conditions
+- Fixed missing version mismatch warnings
+- Fixed RPC errors when players send messages as Gambler, Pelican, Seducer, or Challenger
 
-## Changing
-- Modded clients now use the laptop during games to switch ship styles
+## Changes
+- The client now uses the in-game Admin Map to switch map styles instead of a separate button
 
-## New Feature
-- Option: Enable Vanilla Impostors Amount Limit
+## Additions
+- Option: Enable vanilla Impostor team player count limit
+- Option: Override Origin Meeting Death Message
 
-## New Role
+## New Roles
+- Impostor: Evil Grenadier
 - Crewmate: Swapper
+- Crewmate: Criminologist
+- Crewmate: Justice
 - Neutral: Doomsayer

@@ -531,6 +531,7 @@ MenuTitle.Addon.Imp: "◆ 内鬼附加"
 MenuTitle.GameMode: "▣ 游戏模式相关设定"
 
 # 游戏&系统选项 / System&Game Settings
+CurrentVersionType: "当前游戏版本："
 DisableMeeting: "禁用会议与报告尸体"
 DisableCloseDoor: "禁用关门"
 DisableSabotage: "禁用破坏"
