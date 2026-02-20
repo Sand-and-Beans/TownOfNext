@@ -12,24 +12,8 @@ public static class ServerAddManager
     {
 #if Windows
         // serverManager.AvailableRegions = ServerManager.DefaultRegions;
-        //清风私服添加器会把regionInfo.json改为只读模式，但是本代码撰写于2026.02.14，可能以后会用不到这部分代码了，因为清风已经由2026.02.14被KC准备搞下台了。
-        string localLowPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        localLowPath = Path.Combine(localLowPath, "..", "LocalLow");
-        string amongUsPath = Path.Combine(localLowPath, "Innersloth", "Among Us");
-        string targetFile = Path.Combine(amongUsPath, "regionInfo.json");
-        FileAttributes attributes = File.GetAttributes(targetFile);
-        if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-        {
-            File.SetAttributes(targetFile, attributes & ~FileAttributes.ReadOnly);
-        }
-        
         List<IRegionInfo> regionInfos = new();
-        
-        if (IsChineseUser)
-        {
-            regionInfos.Add(CreateHttp("suqian.xtreme.net.cn", "<color=#cdfffd>XtremeWave</color>.<color=#8B658B>SuChien</color>", 22028, true));
-            regionInfos.Add(CreateHttp("imp.xtreme.net.cn", "<color=#cdfffd>XtremeWave</color>.<color=#FFFF00>HongKong</color>", 443, true));
-        }
+
         regionInfos.Add(CreateHttp("au-as.duikbo.at", "Modded Asia (MAS)", 443, true));
         regionInfos.Add(CreateHttp("www.aumods.org", "Modded NA (MNA)", 443, true));
         regionInfos.Add(CreateHttp("au-eu.duikbo.at", "Modded EU (MEU)", 443, true));
@@ -51,8 +35,6 @@ public static class ServerAddManager
             "Modded Asia (MAS)" => "MAS",
             "Modded NA (MNA)" => "MNA",
             "Modded EU (MEU)" => "MEU",
-            "<color=#cdfffd>XtremeWave</color>.<color=#8B658B>SuChien</color>" => "XW[SQ]",
-            "<color=#cdfffd>XtremeWave</color>.<color=#FFFF00>HongKong</color>" => "XW[HK]",
             "Niko233(NA)" => "Niko[NA]",
             "Niko233(AS)" => "Niko[AS]",
             "Niko233(EU)" => "Niko[EU]",
@@ -64,8 +46,6 @@ public static class ServerAddManager
             "Asia" => new(58, 166, 117, 255),
             "Europe" => new(58, 166, 117, 255),
             "North America" => new(58, 166, 117, 255),
-            "<color=#cdfffd>XtremeWave</color>.<color=#8B658B>SuChien</color>" => new(0, 255, 255, 255),
-            "<color=#cdfffd>XtremeWave</color>.<color=#FFFF00>HongKong</color>" => new(0, 255, 255, 255),
             "Niko233(NA)" => new(255, 224, 0, 255),
             "Niko233(AS)" => new(255, 224, 0, 255),
             "Niko233(EU)" => new(255, 224, 0, 255),

@@ -250,7 +250,7 @@ public static class GameStates
     public static bool IsShip => ShipStatus.Instance != null;
     public static bool IsCanMove => PlayerControl.LocalPlayer?.CanMove is true;
     public static bool IsDead => PlayerControl.LocalPlayer?.Data?.IsDead is true;
-    public static bool IsVanillaServer
+    public static bool IsVanillaServer // from Reactor.gg
     {
         get
         {

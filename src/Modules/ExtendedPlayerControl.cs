@@ -605,7 +605,6 @@ static class ExtendedPlayerControl
             meetingHud.ClearVote();
         }
     }
-    
     public static void NoCheckStartMeeting(this PlayerControl reporter, NetworkedPlayerInfo target, bool force = false)
     { /*サボタージュ中でも関係なしに会議を起こせるメソッド
         targetがnullの場合はボタンとなる*/

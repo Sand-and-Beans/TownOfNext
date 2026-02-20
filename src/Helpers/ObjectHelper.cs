@@ -9,19 +9,7 @@ public static class ObjectHelper
     {
         return collection.SelectMany(x => x);
     }
-    /// <summary>
-    /// 销毁GameObject，用法与GameObject.Destory(obj);相同。
-    /// </summary>
-    public static void Destroy(this GameObject obj)
-    {
-        if (obj == null) return;
-        GameObject.Destroy(obj);
-    }
-    public static void Destroy(this Object obj)
-    {
-        if (obj == null) return;
-        Object.Destroy(obj);
-    }
+
     /// <summary>
     /// オブジェクトの<see cref="TextTranslatorTMP"/>コンポーネントを破棄します
     /// </summary>

@@ -272,6 +272,13 @@ public abstract class RoleBase : IDisposable
     public virtual (byte? votedForId, int? numVotes, bool doVote) ModifyVote(byte voterId, byte sourceVotedForId, bool isIntentional) => (null, null, true);
 
     /// <summary>
+    /// 投票结束后调用的函数
+    /// </summary>
+    /// <param name="voteResult">投票结果</param>
+    public virtual void OnVotingComplete(MeetingVoteManager.VoteResult voteResult)
+    { }
+
+    /// <summary>
     /// 当有人投票时触发
     /// </summary>
     /// <param name="voterId">投票者的ID</param>
@@ -298,12 +305,6 @@ public abstract class RoleBase : IDisposable
     /// <param name="WinDescriptionText">胜利描述文本</param>
     /// <returns>OnExileWrapUp 将要执行的函数</returns>
     public virtual Action CheckExile(NetworkedPlayerInfo exiled, ref bool DecidedWinner, ref List<string> WinDescriptionText) => null;
-
-    /// <summary>
-    /// 平票/跳过调用的函数
-    /// </summary>
-    public virtual void CheckTie(MeetingVoteManager.VoteResult result)
-    { }
     
     /// <summary>
     /// 每次会议结束后调用的函数

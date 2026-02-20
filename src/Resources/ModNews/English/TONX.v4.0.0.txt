@@ -2,21 +2,22 @@
 #Title:TownOfNext v4.0.0
 #SubTitle:★★★★TO The Next★★★★
 #ShortTitle:★TONX v4.0.0
-#Date:2025-11-30T00:00:00Z
+#Date:2026-02-28T00:00:00Z
 #-----------------------------
 
-## Corresponding Official Versions
-- Based on AmongUs v17.1.0
-- Based on TOH v5.1.14
+## Base
+- Base on AmongUs v17.1.0
+- Base on TOH v5.1.14
 
 ## Warning
-- Currently, creating or joining public rooms is unavailable due to server-side updates that make modified public rooms incompatible with the base game. Private rooms remain unaffected.
+- Create/join public lobbies is temporarily unavailable
+- This change is due to a server-side update that makes modded public lobbies unavailable for vanilla. Private lobbies are not affected.
 
 ## What You Need to Know
 - We have refactored the code related to game modes.
 - Upcoming versions of TONX may contain numerous bugs. Please report any bugs you encounter promptly and include logs if possible.
 
-## Fixes
+## Fix
 - Fixed incorrect cooldown for the Surveyor's ability
 - Fixed pets disappearing after a player is revived
 - Fixed the inability to select players via color input for certain role commands
@@ -26,14 +27,14 @@
 - Fixed missing version mismatch warnings
 - Fixed RPC errors when players send messages as Gambler, Pelican, Seducer, or Challenger
 
-## Changes
+## Changing
 - The client now uses the in-game Admin Map to switch map styles instead of a separate button
 
-## Additions
+## New Feature
 - Option: Enable vanilla Impostor team player count limit
 - Option: Override Origin Meeting Death Message
 
-## New Roles
+## New Role
 - Impostor: Evil Grenadier
 - Crewmate: Swapper
 - Crewmate: Criminologist

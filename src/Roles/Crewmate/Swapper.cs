@@ -116,13 +116,6 @@ public sealed class Swapper : RoleBase, IMeetingButton
         }
         else
         {
-            if (Justice.IsJusticeScale &&
-                !(Utils.GetPlayerById(Justice.JusticeScalePlayer).GetRoleClass() as Justice).SelectedPlayers
-                     .Contains(target.PlayerId))
-            {
-                reason = GetString("JusticeScaleBanAbility");
-                return false;
-            }
             if (Targets.Count == 2)
             {
                 reason = GetString("SwapUsed");
@@ -193,9 +186,19 @@ public sealed class Swapper : RoleBase, IMeetingButton
 
         //判断选择的玩家是否合理
         target = Utils.MsgToPlayer(ref msg, out bool multiplePlayers);
-        if (target == null || target.Data.IsDead)
+        if (target == null)
         {
-            error = multiplePlayers ? GetString("SwapMultipleColor") : GetString("SwapNull");
+            error = multiplePlayers ? GetString("SwapMultipleColor") : GetString("SwapHelp");
+            return false;
+        }
+        if (target.Data.IsDead)
+        {
+            error = GetString("SwapNull");
+            return false;
+        }
+        if (Justice.UnableToBeTargetedInJusticeMeeting(target))
+        {
+            error = GetString("JusticeMeetingBanAbility");
             return false;
         }
         return true;

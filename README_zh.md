@@ -46,8 +46,6 @@
   <h3>:four_leaf_clover: <a href="https://github.com/ImaMapleTree/Lotus">Lotus</a> :four_leaf_clover:</h3>
     <p>参考：修改文本框</p>
     <p>参考：快捷键选择消息发送目标</p>
-  <h3>:toolbox: <a href="https://github.com/townofus-pl/AleLuduMod">AleLuduMod</a> :toolbox:</h3>
-    <p>参考：超过15人的游戏支持</p>
 
   </br></br>
 

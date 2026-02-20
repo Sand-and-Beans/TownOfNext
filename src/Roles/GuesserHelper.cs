@@ -50,13 +50,6 @@ public static class GuesserHelper
 
         bool guesserSuicide = false;
         if (guesser.GetRoleClass() is not IGuesser gc) return false;
-        if (Justice.IsJusticeScale &&
-            !(Utils.GetPlayerById(Justice.JusticeScalePlayer).GetRoleClass() as Justice).SelectedPlayers
-                .Contains(target.PlayerId))
-        {
-            reason = GetString("JusticeScaleBanAbility");
-            return false;
-        }
         if (gc.GuessLimit < 1)
         {
             reason = GetString(gc.GuessMaxMsg);
@@ -135,12 +128,21 @@ public static class GuesserHelper
 
         //判断选择的玩家是否合理
         target = Utils.MsgToPlayer(ref msg, out bool multiplePlayers);
-        if (target == null || target.Data.IsDead)
+        if (target == null)
         {
-            error = multiplePlayers ? GetString("GuessMultipleColor") : GetString("GuessNull");
+            error = multiplePlayers ? GetString("GuessMultipleColor") : GetString("GuessHelp");
             return false;
         }
-
+        if (target.Data.IsDead)
+        {
+            error = GetString("GuessNull");
+            return false;
+        }
+        if (Justice.UnableToBeTargetedInJusticeMeeting(target))
+        {
+            error = GetString("JusticeMeetingBanAbility");
+            return false;
+        }
         if (!ChatCommand.GetRoleByInputName(msg, out role, true))
         {
             error = GetString("GuessHelp");
@@ -185,7 +187,6 @@ public static class GuesserHelper
     public static TextMeshPro textTemplate;
     public static void ShowGuessPanel(byte playerId, MeetingHud __instance)
     {
-
         PlayerControl.LocalPlayer.RPCPlayCustomSound("Gunload");
 
         if (PlayerControl.LocalPlayer.cosmetics.ColorId >= 0 && PlayerControl.LocalPlayer.cosmetics.ColorId < Palette.PlayerColors.Count)
@@ -232,6 +233,7 @@ public static class GuesserHelper
             exitButton.GetComponent<PassiveButton>().OnClick.AddListener((Action)(() =>
             {
                 __instance.playerStates.ToList().ForEach(x => x.gameObject.SetActive(true));
+                JusticeMeetingHudPopulateButtonsPatch.HandleJusticeMeeting(__instance);
                 UnityEngine.Object.Destroy(container.gameObject);
             }));
             ExitButton = exitButton.GetComponent<PassiveButton>();
@@ -403,6 +405,7 @@ public static class GuesserHelper
 
                         // Reset the GUI
                         __instance.playerStates.ToList().ForEach(x => x.gameObject.SetActive(true));
+                        JusticeMeetingHudPopulateButtonsPatch.HandleJusticeMeeting(__instance);
                         UnityEngine.Object.Destroy(container.gameObject);
                         textTemplate.enabled = false;
 
